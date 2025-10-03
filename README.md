@@ -124,9 +124,3 @@ for opening input images (e.g. not documents like pdf).
 It is suggested to use leptonica with built-in support for [zlib](https://zlib.net),
 [png](https://sourceforge.net/projects/libpng) and
 [tiff](http://www.simplesystems.org/libtiff) (for multipage tiff).
-
-## Latest Version of README
-
-For the latest online version of the README.md see:
-
-<https://github.com/tesseract-ocr/tesseract/blob/main/README.md>
