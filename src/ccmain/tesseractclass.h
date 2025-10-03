@@ -69,7 +69,9 @@ class WERD_RES;
 
 class ColumnFinder;
 class DocumentData;
+#ifndef DISABLED_LEGACY_ENGINE
 class EquationDetect;
+#endif // ndef DISABLED_LEGACY_ENGINE
 class ImageData;
 class LSTMRecognizer;
 class Tesseract;
@@ -189,12 +191,17 @@ public:
   // Clear the document dictionary for this and all subclassifiers.
   void ResetDocumentDictionary();
 
+#ifndef DISABLED_LEGACY_ENGINE
   // Set the equation detector.
   void SetEquationDetect(EquationDetect *detector);
+#endif // ndef DISABLED_LEGACY_ENGINE
 
   // Simple accessors.
   const FCOORD &reskew() const {
     return reskew_;
+  }
+  float gradient() const {
+    return gradient_;
   }
   // Destroy any existing pix and return a pointer to the pointer.
   Image *mutable_pix_binary() {
@@ -523,13 +530,10 @@ public:
   // instances of the same font loaded.
   void SetupUniversalFontIds();
 
-  int init_tesseract_lm(const std::string &arg0, const std::string &textbase,
-                        const std::string &language, TessdataManager *mgr);
-
   void recognize_page(std::string &image_name);
   void end_tesseract();
 
-  bool init_tesseract_lang_data(const std::string &arg0, const std::string &textbase,
+  bool init_tesseract_lang_data(const std::string &arg0,
                                 const std::string &language, OcrEngineMode oem, char **configs,
                                 int configs_size, const std::vector<std::string> *vars_vec,
                                 const std::vector<std::string> *vars_values,
@@ -593,7 +597,7 @@ public:
   void recog_word_recursive(WERD_RES *word);
   void recog_word(WERD_RES *word);
   void split_and_recog_word(WERD_RES *word);
-  void split_word(WERD_RES *word, int split_pt, WERD_RES **right_piece,
+  void split_word(WERD_RES *word, unsigned split_pt, WERD_RES **right_piece,
                   BlamerBundle **orig_blamer_bundle) const;
   void join_words(WERD_RES *word, WERD_RES *word2, BlamerBundle *orig_bb) const;
   //// fixspace.cpp ///////////////////////////////////////////////////////
@@ -722,8 +726,8 @@ public:
   // vector holding classification results for a sequence of consecutive
   // blobs, with index 0 being a single blob, index 1 being 2 blobs etc.
   void SearchForText(const std::vector<BLOB_CHOICE_LIST *> *choices, int choices_pos,
-                     int choices_length, const std::vector<UNICHAR_ID> &target_text,
-                     int text_index, float rating, std::vector<int> *segmentation,
+                     unsigned choices_length, const std::vector<UNICHAR_ID> &target_text,
+                     unsigned text_index, float rating, std::vector<int> *segmentation,
                      float *best_rating, std::vector<int> *best_segmentation);
   // Counts up the labelled words and the blobs within.
   // Deletes all unused or emptied words, counting the unused ones.
@@ -754,13 +758,16 @@ public:
   BOOL_VAR_H(tessedit_make_boxes_from_boxes);
   BOOL_VAR_H(tessedit_train_line_recognizer);
   BOOL_VAR_H(tessedit_dump_pageseg_images);
+  // TODO: remove deprecated tessedit_do_invert in release 6.
   BOOL_VAR_H(tessedit_do_invert);
+  double_VAR_H(invert_threshold);
   INT_VAR_H(tessedit_pageseg_mode);
   INT_VAR_H(thresholding_method);
-  INT_VAR_H(thresholding_window_size);
+  BOOL_VAR_H(thresholding_debug);
+  double_VAR_H(thresholding_window_size);
   double_VAR_H(thresholding_kfactor);
-  INT_VAR_H(thresholding_tile_size);
-  INT_VAR_H(thresholding_smooth_size);
+  double_VAR_H(thresholding_tile_size);
+  double_VAR_H(thresholding_smooth_kernel_size);
   double_VAR_H(thresholding_score_fraction);
   INT_VAR_H(tessedit_ocr_engine_mode);
   STRING_VAR_H(tessedit_char_blacklist);
@@ -893,6 +900,9 @@ public:
   BOOL_VAR_H(tessedit_create_txt);
   BOOL_VAR_H(tessedit_create_hocr);
   BOOL_VAR_H(tessedit_create_alto);
+  BOOL_VAR_H(tessedit_create_page_xml);
+  BOOL_VAR_H(page_xml_polygon);
+  INT_VAR_H(page_xml_level);
   BOOL_VAR_H(tessedit_create_lstmbox);
   BOOL_VAR_H(tessedit_create_tsv);
   BOOL_VAR_H(tessedit_create_wordstrbox);
@@ -944,7 +954,9 @@ public:
   BOOL_VAR_H(textord_use_cjk_fp_model);
   BOOL_VAR_H(poly_allow_detailed_fx);
   BOOL_VAR_H(tessedit_init_config_only);
+#ifndef DISABLED_LEGACY_ENGINE
   BOOL_VAR_H(textord_equation_detect);
+#endif // ndef DISABLED_LEGACY_ENGINE
   BOOL_VAR_H(textord_tabfind_vertical_text);
   BOOL_VAR_H(textord_tabfind_force_vertical_text);
   double_VAR_H(textord_tabfind_vertical_text_ratio);
@@ -995,6 +1007,7 @@ private:
   int scaled_factor_;
   FCOORD deskew_;
   FCOORD reskew_;
+  float gradient_;
   TesseractStats stats_;
   // Sub-languages to be tried in addition to this.
   std::vector<Tesseract *> sub_langs_;
@@ -1003,8 +1016,10 @@ private:
   Tesseract *most_recently_used_;
   // The size of the font table, ie max possible font id + 1.
   int font_table_size_;
+#ifndef DISABLED_LEGACY_ENGINE
   // Equation detector. Note: this pointer is NOT owned by the class.
   EquationDetect *equ_detect_;
+#endif // ndef DISABLED_LEGACY_ENGINE
   // LSTM recognizer, if available.
   LSTMRecognizer *lstm_recognizer_;
   // Output "page" number (actually line number) using TrainLineRecognizer.

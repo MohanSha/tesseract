@@ -67,8 +67,8 @@ TabFind::TabFind(int gridsize, const ICOORD &bleft, const ICOORD &tright, TabVec
     : AlignedBlob(gridsize, bleft, tright)
     , resolution_(resolution)
     , image_origin_(0, tright.y() - 1)
-    , v_it_(&vectors_) {
-  width_cb_ = nullptr;
+    , v_it_(&vectors_)
+    , width_cb_(nullptr) {
   v_it_.add_list_after(vlines);
   SetVerticalSkewAndParallelize(vertical_x, vertical_y);
   using namespace std::placeholders; // for _1
@@ -562,7 +562,7 @@ ScrollView *TabFind::FindTabBoxes(int min_gutter_width, double tabfind_aligned_g
   left_tab_boxes_.clear();
   right_tab_boxes_.clear();
   // For every bbox in the grid, determine whether it uses a tab on an edge.
-  GridSearch<BLOBNBOX, BLOBNBOX_CLIST, BLOBNBOX_C_IT> gsearch(this);
+  BlobGridSearch gsearch(this);
   gsearch.StartFullSearch();
   BLOBNBOX *bbox;
   while ((bbox = gsearch.NextFullSearch()) != nullptr) {
@@ -971,7 +971,7 @@ void TabFind::ComputeColumnWidths(ScrollView *tab_win, ColPartitionGrid *part_gr
 #endif // !GRAPHICS_DISABLED
   // Accumulate column sections into a STATS
   int col_widths_size = (tright_.x() - bleft_.x()) / kColumnWidthFactor;
-  STATS col_widths(0, col_widths_size + 1);
+  STATS col_widths(0, col_widths_size);
   ApplyPartitionsToColumnWidths(part_grid, &col_widths);
 #ifndef GRAPHICS_DISABLED
   if (tab_win != nullptr) {
@@ -1099,8 +1099,8 @@ int TabFind::FindMedianGutterWidth(TabVector_LIST *lines) {
   TabVector_IT it(lines);
   int prev_right = -1;
   int max_gap = static_cast<int>(kMaxGutterWidthAbsolute * resolution_);
-  STATS gaps(0, max_gap);
-  STATS heights(0, max_gap);
+  STATS gaps(0, max_gap - 1);
+  STATS heights(0, max_gap - 1);
   for (it.mark_cycle_pt(); !it.cycled_list(); it.forward()) {
     TabVector *v = it.data();
     TabVector *partner = v->GetSinglePartner();

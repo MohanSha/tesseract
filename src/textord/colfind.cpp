@@ -142,7 +142,7 @@ ColumnFinder::~ColumnFinder() {
 }
 
 // Performs initial processing on the blobs in the input_block:
-// Setup the part_grid, stroke_width_, nontext_map.
+// Setup the part_grid_, stroke_width_, nontext_map.
 // Obvious noise blobs are filtered out and used to mark the nontext_map_.
 // Initial stroke-width analysis is used to get local text alignment
 // direction, so the textline projection_ map can be setup.
@@ -440,7 +440,7 @@ int ColumnFinder::FindBlocks(PageSegMode pageseg_mode, Image scaled_color, int s
           DisplayTabVectors(window);
         }
         if (window != nullptr && textord_tabfind_show_partitions > 1) {
-          delete window->AwaitEvent(SVET_DESTROY);
+          window->AwaitEvent(SVET_DESTROY);
         }
       }
     }
@@ -476,7 +476,7 @@ int ColumnFinder::FindBlocks(PageSegMode pageseg_mode, Image scaled_color, int s
     bool waiting = false;
     do {
       waiting = false;
-      SVEvent *event = blocks_win_->AwaitEvent(SVET_ANY);
+      auto event = blocks_win_->AwaitEvent(SVET_ANY);
       if (event->type == SVET_INPUT && event->parameter != nullptr) {
         if (*event->parameter == 'd') {
           result = -1;
@@ -488,7 +488,6 @@ int ColumnFinder::FindBlocks(PageSegMode pageseg_mode, Image scaled_color, int s
       } else {
         waiting = true;
       }
-      delete event;
     } while (waiting);
   }
 #endif // !GRAPHICS_DISABLED
@@ -708,7 +707,8 @@ bool ColumnFinder::AssignColumns(const PartSetVector &part_sets) {
       } else {
         column_set_costs[part_i][col_i] = INT32_MAX;
         if (debug) {
-          tprintf("Set id %d did not match at y=%d, lineset =%p\n", col_i, part_i, line_set);
+          tprintf("Set id %d did not match at y=%d, lineset =%p\n",
+                  col_i, part_i, static_cast<void *>(line_set));
         }
       }
     }
@@ -807,7 +807,7 @@ bool ColumnFinder::BiggestUnassignedRange(int set_count, const bool *any_columns
 int ColumnFinder::RangeModalColumnSet(int **column_set_costs, const int *assigned_costs, int start,
                                       int end) {
   int column_count = column_sets_.size();
-  STATS column_stats(0, column_count);
+  STATS column_stats(0, column_count - 1);
   for (int part_i = start; part_i < end; ++part_i) {
     for (int col_j = 0; col_j < column_count; ++col_j) {
       if (column_set_costs[part_i][col_j] < assigned_costs[part_i]) {
@@ -971,7 +971,7 @@ void ColumnFinder::ReleaseBlobsAndCleanupUnused(TO_BLOCK *block) {
 // Splits partitions that cross columns where they have nothing in the gap.
 void ColumnFinder::GridSplitPartitions() {
   // Iterate the ColPartitions in the grid.
-  GridSearch<ColPartition, ColPartition_CLIST, ColPartition_C_IT> gsearch(&part_grid_);
+  ColPartitionGridSearch gsearch(&part_grid_);
   gsearch.StartFullSearch();
   ColPartition *dont_repeat = nullptr;
   ColPartition *part;
@@ -1438,7 +1438,7 @@ void ColumnFinder::TransformToBlocks(BLOCK_LIST *blocks, TO_BLOCK_LIST *to_block
   // like horizontal lines going before the text lines above them.
   ColPartition_CLIST temp_part_list;
   // Iterate the ColPartitions in the grid. It starts at the top
-  GridSearch<ColPartition, ColPartition_CLIST, ColPartition_C_IT> gsearch(&part_grid_);
+  ColPartitionGridSearch gsearch(&part_grid_);
   gsearch.StartFullSearch();
   int prev_grid_y = -1;
   ColPartition *part;
@@ -1576,8 +1576,8 @@ void ColumnFinder::RotateAndReskewBlocks(bool input_is_rtl, TO_BLOCK_LIST *block
     FCOORD blob_rotation = ComputeBlockAndClassifyRotation(block);
     // Rotate all the blobs if needed and recompute the bounding boxes.
     // Compute the block median blob width and height as we go.
-    STATS widths(0, block->pdblk.bounding_box().width());
-    STATS heights(0, block->pdblk.bounding_box().height());
+    STATS widths(0, block->pdblk.bounding_box().width() - 1);
+    STATS heights(0, block->pdblk.bounding_box().height() - 1);
     RotateAndExplodeBlobList(blob_rotation, &to_block->blobs, &widths, &heights);
     TO_ROW_IT row_it(to_block->get_rows());
     for (row_it.mark_cycle_pt(); !row_it.cycled_list(); row_it.forward()) {

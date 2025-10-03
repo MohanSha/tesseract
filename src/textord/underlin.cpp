@@ -162,14 +162,13 @@ void find_underlined_blobs(    // get chop points
     float baseline_offset,     // amount to shrinke it
     ICOORDELT_LIST *chop_cells // places to chop
 ) {
-  int16_t x, y;     // sides of blob
   ICOORD blob_chop; // sides of blob
   TBOX blob_box = u_line->bounding_box();
   // cell iterator
   ICOORDELT_IT cell_it = chop_cells;
-  STATS upper_proj(blob_box.left(), blob_box.right() + 1);
-  STATS middle_proj(blob_box.left(), blob_box.right() + 1);
-  STATS lower_proj(blob_box.left(), blob_box.right() + 1);
+  STATS upper_proj(blob_box.left(), blob_box.right());
+  STATS middle_proj(blob_box.left(), blob_box.right());
+  STATS lower_proj(blob_box.left(), blob_box.right());
   C_OUTLINE_IT out_it; // outlines of blob
 
   ASSERT_HOST(u_line->cblob() != nullptr);
@@ -180,9 +179,10 @@ void find_underlined_blobs(    // get chop points
                                    &middle_proj, &upper_proj);
   }
 
-  for (x = blob_box.left(); x < blob_box.right(); x++) {
+  for (auto x = blob_box.left(); x < blob_box.right(); x++) {
     if (middle_proj.pile_count(x) > 0) {
-      for (y = x + 1; y < blob_box.right() && middle_proj.pile_count(y) > 0; y++) {
+      auto y = x + 1;
+      for (; y < blob_box.right() && middle_proj.pile_count(y) > 0; y++) {
         ;
       }
       blob_chop = ICOORD(x, y);
@@ -195,7 +195,7 @@ void find_underlined_blobs(    // get chop points
 /**********************************************************************
  * vertical_cunderline_projection
  *
- * Compute the vertical projection of a outline from its outlines
+ * Compute the vertical projection of an outline from its outlines
  * and add to the given STATS.
  **********************************************************************/
 
@@ -211,13 +211,11 @@ void vertical_cunderline_projection( // project outlines
   ICOORD pos;               // current point
   ICOORD step;              // edge step
   int16_t lower_y, upper_y; // region limits
-  int32_t length;           // of outline
-  int16_t stepindex;        // current step
   C_OUTLINE_IT out_it = outline->child();
 
   pos = outline->start_pos();
-  length = outline->pathlength();
-  for (stepindex = 0; stepindex < length; stepindex++) {
+  int16_t length = outline->pathlength();
+  for (int16_t stepindex = 0; stepindex < length; stepindex++) {
     step = outline->step(stepindex);
     if (step.x() > 0) {
       lower_y = static_cast<int16_t>(floor(baseline->y(pos.x()) + baseline_offset + 0.5));

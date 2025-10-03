@@ -27,7 +27,7 @@ class Series : public Plumbing {
 public:
   // ni_ and no_ will be set by AddToStack.
   TESS_API
-  explicit Series(const char *name);
+  explicit Series(const std::string &name);
   ~Series() override = default;
 
   // Returns the shape output from the network given an input shape (which may
@@ -82,7 +82,7 @@ public:
   // deletes itself. The first part, up to network with index last_start, goes
   // into start, and the rest goes into end.
   TESS_API
-  void SplitAt(int last_start, Series **start, Series **end);
+  void SplitAt(unsigned last_start, Series **start, Series **end);
 
   // Appends the elements of the src series to this, removing from src and
   // deleting it.

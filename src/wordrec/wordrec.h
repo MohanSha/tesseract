@@ -52,7 +52,7 @@ public:
   // tface.cpp
   void program_editup(const std::string &textbase, TessdataManager *init_classifier,
                       TessdataManager *init_dict);
-  void program_editdown(int32_t elasped_time);
+  void program_editdown(int32_t elapsed_time);
   int end_recog();
   int dict_word(const WERD_CHOICE &word);
 
@@ -169,7 +169,7 @@ private:
 };
 
 /* ccmain/tstruct.cpp *********************************************************/
-class FRAGMENT : public ELIST_LINK {
+class FRAGMENT : public ELIST<FRAGMENT>::LINK {
 public:
   FRAGMENT() { // constructor
   }
@@ -246,7 +246,7 @@ public:
   void program_editup(const std::string &textbase, TessdataManager *init_classifier,
                       TessdataManager *init_dict);
   void cc_recog(WERD_RES *word);
-  void program_editdown(int32_t elasped_time);
+  void program_editdown(int32_t elapsed_time);
   void set_pass1();
   void set_pass2();
   int end_recog();
@@ -338,13 +338,13 @@ public:
   SEAM *chop_numbered_blob(TWERD *word, int32_t blob_number, bool italic_blob,
                            const std::vector<SEAM *> &seams);
   SEAM *chop_overlapping_blob(const std::vector<TBOX> &boxes, bool italic_blob, WERD_RES *word_res,
-                              int *blob_number);
+                              unsigned *blob_number);
   SEAM *improve_one_blob(const std::vector<BLOB_CHOICE *> &blob_choices, DANGERR *fixpt,
                          bool split_next_to_fragment, bool italic_blob, WERD_RES *word,
-                         int *blob_number);
+                         unsigned *blob_number);
   SEAM *chop_one_blob(const std::vector<TBOX> &boxes,
                       const std::vector<BLOB_CHOICE *> &blob_choices, WERD_RES *word_res,
-                      int *blob_number);
+                      unsigned *blob_number);
   void chop_word_main(WERD_RES *word);
   void improve_by_chopping(float rating_cert_scale, WERD_RES *word,
                            BestChoiceBundle *best_choice_bundle, BlamerBundle *blamer_bundle,

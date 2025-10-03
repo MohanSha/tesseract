@@ -31,13 +31,14 @@ namespace tesseract {
  *
  * Constructor for a simple rectangular block.
  */
-BLOCK::BLOCK(const char *name,           ///< filename
-             bool prop,                  ///< proportional
-             int16_t kern,               ///< kerning
-             int16_t space,              ///< spacing
-             int16_t xmin,               ///< bottom left
-             int16_t ymin, int16_t xmax, ///< top right
-             int16_t ymax)
+BLOCK::BLOCK(const char *name, ///< filename
+             bool prop,        ///< proportional
+             int16_t kern,     ///< kerning
+             int16_t space,    ///< spacing
+             TDimension xmin,  ///< bottom left
+             TDimension ymin,
+             TDimension xmax,  ///< top right
+             TDimension ymax)
     : pdblk(xmin, ymin, xmax, ymax)
     , filename(name)
     , re_rotation_(1.0f, 0.0f)
@@ -67,9 +68,9 @@ BLOCK::BLOCK(const char *name,           ///< filename
  * Sort Comparator: Return <0 if row1 top < row2 top
  */
 
-static int decreasing_top_order(const void *row1, const void *row2) {
-  return (*reinterpret_cast<ROW *const *>(row2))->bounding_box().top() -
-         (*reinterpret_cast<ROW *const *>(row1))->bounding_box().top();
+static int decreasing_top_order(const ROW *row1, const ROW *row2) {
+  return row2->bounding_box().top() -
+         row1->bounding_box().top();
 }
 
 /**
@@ -221,7 +222,7 @@ void BLOCK::print( // print list of sides
 BLOCK &BLOCK::operator=( // assignment
     const BLOCK &source  // from this
 ) {
-  this->ELIST_LINK::operator=(source);
+  this->ELIST<BLOCK>::LINK::operator=(source);
   pdblk = source.pdblk;
   proportional = source.proportional;
   kerning = source.kerning;
@@ -311,7 +312,7 @@ static bool RightMargin(ICOORDELT_LIST *segments, int x, int *margin) {
 //  |  You  see this|    | |_| \|_| |   |rectangular      |
 //  |text is  flowed|    |      }   |   |boundary     that|
 //  |around  a  mid-|     \   ____  |   |forms the  ideal-|
-//  |cloumn portrait._____ \       /  __|ized  text margin|
+//  |column portrait._____ \       /  __|ized  text margin|
 //  |  Polyblobs     exist| \    /   |from which we should|
 //  |to account for insets|  |   |   |measure    paragraph|
 //  |which make  otherwise|  -----   |indentation.        |

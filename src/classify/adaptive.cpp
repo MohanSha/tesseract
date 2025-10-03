@@ -59,13 +59,12 @@ PERM_CONFIG_STRUCT::~PERM_CONFIG_STRUCT() {
   delete[] Ambigs;
 }
 
-ADAPT_CLASS_STRUCT::ADAPT_CLASS_STRUCT() {
-  NumPermConfigs = 0;
-  MaxNumTimesSeen = 0;
-  TempProtos = NIL_LIST;
-
-  PermProtos = NewBitVector(MAX_NUM_PROTOS);
-  PermConfigs = NewBitVector(MAX_NUM_CONFIGS);
+ADAPT_CLASS_STRUCT::ADAPT_CLASS_STRUCT() :
+  NumPermConfigs(0),
+  MaxNumTimesSeen(0),
+  PermProtos(NewBitVector(MAX_NUM_PROTOS)),
+  PermConfigs(NewBitVector(MAX_NUM_CONFIGS)),
+  TempProtos(NIL_LIST) {
   zero_all_bits(PermProtos, WordsInVectorOfSize(MAX_NUM_PROTOS));
   zero_all_bits(PermConfigs, WordsInVectorOfSize(MAX_NUM_CONFIGS));
 
@@ -99,7 +98,7 @@ ADAPT_TEMPLATES_STRUCT::ADAPT_TEMPLATES_STRUCT(UNICHARSET &unicharset) {
   NumNonEmptyClasses = 0;
 
   /* Insert an empty class for each unichar id in unicharset */
-  for (int i = 0; i < MAX_NUM_CLASSES; i++) {
+  for (unsigned i = 0; i < MAX_NUM_CLASSES; i++) {
     Class[i] = nullptr;
     if (i < unicharset.size()) {
       AddAdaptedClass(this, new ADAPT_CLASS_STRUCT, i);
@@ -108,7 +107,7 @@ ADAPT_TEMPLATES_STRUCT::ADAPT_TEMPLATES_STRUCT(UNICHARSET &unicharset) {
 }
 
 ADAPT_TEMPLATES_STRUCT::~ADAPT_TEMPLATES_STRUCT() {
-  for (int i = 0; i < (Templates)->NumClasses; i++) {
+  for (unsigned i = 0; i < (Templates)->NumClasses; i++) {
     delete Class[i];
   }
   delete Templates;
@@ -124,16 +123,13 @@ int Classify::GetFontinfoId(ADAPT_CLASS_STRUCT *Class, uint8_t ConfigId) {
 ///
 /// @param MaxProtoId  max id of any proto in new config
 /// @param FontinfoId font information from pre-trained templates
-TEMP_CONFIG_STRUCT::TEMP_CONFIG_STRUCT(int maxProtoId, int fontinfoId) {
-  int NumProtos = maxProtoId + 1;
-
-  Protos = NewBitVector(NumProtos);
-
-  NumTimesSeen = 1;
-  MaxProtoId = maxProtoId;
-  ProtoVectorSize = WordsInVectorOfSize(NumProtos);
+TEMP_CONFIG_STRUCT::TEMP_CONFIG_STRUCT(int maxProtoId, int fontinfoId) :
+  NumTimesSeen(1),
+  ProtoVectorSize(WordsInVectorOfSize(maxProtoId + 1)),
+  MaxProtoId(maxProtoId),
+  Protos(NewBitVector(maxProtoId + 1)),
+  FontinfoId(fontinfoId) {
   zero_all_bits(Protos, ProtoVectorSize);
-  FontinfoId = fontinfoId;
 }
 
 TEMP_CONFIG_STRUCT::~TEMP_CONFIG_STRUCT() {
@@ -160,11 +156,11 @@ void Classify::PrintAdaptedTemplates(FILE *File, ADAPT_TEMPLATES_STRUCT *Templat
   fprintf(File, "   Id  NC NPC  NP NPP\n");
   fprintf(File, "------------------------\n");
 
-  for (int i = 0; i < (Templates->Templates)->NumClasses; i++) {
+  for (unsigned i = 0; i < (Templates->Templates)->NumClasses; i++) {
     IClass = Templates->Templates->Class[i];
     AClass = Templates->Class[i];
     if (!IsEmptyAdaptedClass(AClass)) {
-      fprintf(File, "%5d  %s %3d %3d %3d %3zd\n", i, unicharset.id_to_unichar(i), IClass->NumConfigs,
+      fprintf(File, "%5u  %s %3d %3d %3d %3zd\n", i, unicharset.id_to_unichar(i), IClass->NumConfigs,
               AClass->NumPermConfigs, IClass->NumProtos,
               IClass->NumProtos - AClass->TempProtos->size());
     }
@@ -242,7 +238,7 @@ ADAPT_TEMPLATES_STRUCT *Classify::ReadAdaptedTemplates(TFile *fp) {
   Templates->Templates = ReadIntTemplates(fp);
 
   /* then read in the adaptive info for each class */
-  for (int i = 0; i < (Templates->Templates)->NumClasses; i++) {
+  for (unsigned i = 0; i < (Templates->Templates)->NumClasses; i++) {
     Templates->Class[i] = ReadAdaptedClass(fp);
   }
   return (Templates);
@@ -343,8 +339,6 @@ void WriteAdaptedClass(FILE *File, ADAPT_CLASS_STRUCT *Class, int NumConfigs) {
  * @note Globals: none
  */
 void Classify::WriteAdaptedTemplates(FILE *File, ADAPT_TEMPLATES_STRUCT *Templates) {
-  int i;
-
   /* first write the high level adaptive template struct */
   fwrite(Templates, sizeof(ADAPT_TEMPLATES_STRUCT), 1, File);
 
@@ -352,7 +346,7 @@ void Classify::WriteAdaptedTemplates(FILE *File, ADAPT_TEMPLATES_STRUCT *Templat
   WriteIntTemplates(File, Templates->Templates, unicharset);
 
   /* then write out the adaptive info for each class */
-  for (i = 0; i < (Templates->Templates)->NumClasses; i++) {
+  for (unsigned i = 0; i < (Templates->Templates)->NumClasses; i++) {
     WriteAdaptedClass(File, Templates->Class[i], Templates->Templates->Class[i]->NumConfigs);
   }
 } /* WriteAdaptedTemplates */

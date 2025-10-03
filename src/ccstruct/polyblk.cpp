@@ -34,8 +34,6 @@ namespace tesseract {
 
 #define INTERSECTING INT16_MAX
 
-int lessthan(const void *first, const void *second);
-
 POLY_BLOCK::POLY_BLOCK(ICOORDELT_LIST *points, PolyBlockType t) {
   ICOORDELT_IT v = &vertices;
 
@@ -198,8 +196,8 @@ void POLY_BLOCK::rotate(FCOORD rotation) {
     pos.set_x(pt->x());
     pos.set_y(pt->y());
     pos.rotate(rotation);
-    pt->set_x(static_cast<int16_t>(floor(pos.x() + 0.5)));
-    pt->set_y(static_cast<int16_t>(floor(pos.y() + 0.5)));
+    pt->set_x(static_cast<TDimension>(floor(pos.x() + 0.5)));
+    pt->set_y(static_cast<TDimension>(floor(pos.y() + 0.5)));
     pts.forward();
   } while (!pts.at_first());
   compute_bb();
@@ -270,15 +268,12 @@ void POLY_BLOCK::plot(ScrollView *window, int32_t num) {
 }
 
 void POLY_BLOCK::fill(ScrollView *window, ScrollView::Color colour) {
-  int16_t y;
-  int16_t width;
-  PB_LINE_IT *lines;
   ICOORDELT_IT s_it;
 
-  lines = new PB_LINE_IT(this);
+  std::unique_ptr<PB_LINE_IT> lines(new PB_LINE_IT(this));
   window->Pen(colour);
 
-  for (y = this->bounding_box()->bottom(); y <= this->bounding_box()->top(); y++) {
+  for (auto y = this->bounding_box()->bottom(); y <= this->bounding_box()->top(); y++) {
     const std::unique_ptr</*non-const*/ ICOORDELT_LIST> segments(lines->get_line(y));
     if (!segments->empty()) {
       s_it.set_to_list(segments.get());
@@ -286,14 +281,12 @@ void POLY_BLOCK::fill(ScrollView *window, ScrollView::Color colour) {
         // Note different use of ICOORDELT, x coord is x coord of pixel
         // at the start of line segment, y coord is length of line segment
         // Last pixel is start pixel + length.
-        width = s_it.data()->y();
+        auto width = s_it.data()->y();
         window->SetCursor(s_it.data()->x(), y);
         window->DrawTo(s_it.data()->x() + static_cast<float>(width), y);
       }
     }
   }
-
-  delete lines;
 }
 #endif
 
@@ -339,7 +332,7 @@ bool POLY_BLOCK::overlap(POLY_BLOCK *other) {
   return false;
 }
 
-ICOORDELT_LIST *PB_LINE_IT::get_line(int16_t y) {
+ICOORDELT_LIST *PB_LINE_IT::get_line(TDimension y) {
   ICOORDELT_IT v, r;
   ICOORDELT_LIST *result;
   ICOORDELT *x, *current, *previous;
@@ -356,13 +349,21 @@ ICOORDELT_LIST *PB_LINE_IT::get_line(int16_t y) {
       float fx =
           0.5f + previous->x() +
           (current->x() - previous->x()) * (fy - previous->y()) / (current->y() - previous->y());
-      x = new ICOORDELT(static_cast<int16_t>(fx), 0);
+      x = new ICOORDELT(static_cast<TDimension>(fx), 0);
       r.add_to_end(x);
     }
   }
 
   if (!r.empty()) {
-    r.sort(lessthan);
+    r.sort([](const ICOORDELT *p1, const ICOORDELT *p2) {
+      if (p1->x() < p2->x()) {
+        return (-1);
+      } else if (p1->x() > p2->x()) {
+        return (1);
+      } else {
+        return (0);
+      }
+      });
     for (r.mark_cycle_pt(); !r.cycled_list(); r.forward()) {
       x = r.data();
     }
@@ -374,19 +375,6 @@ ICOORDELT_LIST *PB_LINE_IT::get_line(int16_t y) {
   }
 
   return result;
-}
-
-int lessthan(const void *first, const void *second) {
-  const ICOORDELT *p1 = *reinterpret_cast<const ICOORDELT *const *>(first);
-  const ICOORDELT *p2 = *reinterpret_cast<const ICOORDELT *const *>(second);
-
-  if (p1->x() < p2->x()) {
-    return (-1);
-  } else if (p1->x() > p2->x()) {
-    return (1);
-  } else {
-    return (0);
-  }
 }
 
 #ifndef GRAPHICS_DISABLED

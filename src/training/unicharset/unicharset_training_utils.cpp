@@ -2,7 +2,6 @@
 // File:        unicharset_training_utils.cpp
 // Description: Training utilities for UNICHARSET.
 // Author:      Ray Smith
-// Created:     Fri Oct 17 17:09:01 PDT 2014
 //
 // (C) Copyright 2014, Google Inc.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +28,7 @@
 #include "icuerrorcode.h"
 #include "normstrngs.h"
 #include "statistc.h"
+#include "tesserrstream.h"   // for tesserr
 #include "unicharset.h"
 #include "unicode/uchar.h"   // from libicu
 #include "unicode/uscript.h" // from libicu
@@ -38,7 +38,7 @@ namespace tesseract {
 // Helper sets the character attribute properties and sets up the script table.
 // Does not set tops and bottoms.
 void SetupBasicProperties(bool report_errors, bool decompose, UNICHARSET *unicharset) {
-  for (int unichar_id = 0; unichar_id < unicharset->size(); ++unichar_id) {
+  for (size_t unichar_id = 0; unichar_id < unicharset->size(); ++unichar_id) {
     // Convert any custom ligatures.
     const char *unichar_str = unicharset->id_to_unichar(unichar_id);
     for (int i = 0; UNICHARSET::kCustomLigatures[i][0] != nullptr; ++i) {
@@ -128,7 +128,7 @@ void SetupBasicProperties(bool report_errors, bool decompose, UNICHARSET *unicha
     std::string normed_str;
     if (unichar_id != 0 &&
         tesseract::NormalizeUTF8String(
-            decompose ? tesseract::UnicodeNormMode::kNFKD : tesseract::UnicodeNormMode::kNFKC,
+            decompose ? tesseract::UnicodeNormMode::kNFD : tesseract::UnicodeNormMode::kNFC,
             tesseract::OCRNorm::kNormalize, tesseract::GraphemeNorm::kNone, unichar_str,
             &normed_str) &&
         !normed_str.empty()) {
@@ -189,8 +189,8 @@ void SetPropertiesForInputFile(const std::string &script_dir,
 
   // Load the input unicharset
   unicharset.load_from_file(input_unicharset_file.c_str());
-  tprintf("Loaded unicharset of size %d from file %s\n", unicharset.size(),
-          input_unicharset_file.c_str());
+  tesserr << "Loaded unicharset of size " << unicharset.size()
+          << " from file " << input_unicharset_file << '\n';
 
   // Set unichar properties
   tprintf("Setting unichar properties\n");

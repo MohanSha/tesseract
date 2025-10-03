@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////
+// SPDX-License-Identifier: Apache-2.0
 // File:        baseapi.h
 // Description: Simple API for calling tesseract.
 // Author:      Ray Smith
@@ -13,8 +13,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-///////////////////////////////////////////////////////////////////////
 
 #ifndef TESSERACT_API_BASEAPI_H_
 #define TESSERACT_API_BASEAPI_H_
@@ -89,15 +87,6 @@ public:
   static const char *Version();
 
   /**
-   * If compiled with OpenCL AND an available OpenCL
-   * device is deemed faster than serial code, then
-   * "device" is populated with the cl_device_id
-   * and returns sizeof(cl_device_id)
-   * otherwise *device=nullptr and returns 0.
-   */
-  static size_t getOpenCLDevice(void **device);
-
-  /**
    * Set the name of the input file. Needed for training and
    * reading a UNLV zone file, and for searchable PDF output.
    */
@@ -154,7 +143,7 @@ public:
   /**
    * Print Tesseract fonts table to the given file.
    */
-  void PrintFontsTable(FILE* fp) const;
+  void PrintFontsTable(FILE *fp) const;
 
 #endif
 
@@ -246,14 +235,6 @@ public:
    * Returns the available languages in the sorted vector of std::string.
    */
   void GetAvailableLanguagesAsVector(std::vector<std::string> *langs) const;
-
-  /**
-   * Init only the lang model component of Tesseract. The only functions
-   * that work after this init are SetVariable and IsValidWord.
-   * WARNING: temporary! This function will be removed from here and placed
-   * in a separate API at some future time.
-   */
-  int InitLangMod(const char *datapath, const char *language);
 
   /**
    * Init only for page layout analysis. Use only for calls to SetImage and
@@ -355,6 +336,11 @@ public:
    * May be called any time after SetImage, or after TesseractRect.
    */
   Pix *GetThresholdedImage();
+
+  /**
+   * Return average gradient of lines on page.
+   */
+  float GetGradient();
 
   /**
    * Get the result of page layout analysis as a leptonica-style
@@ -484,7 +470,7 @@ public:
    * timeout_millisec terminates processing if any single page
    * takes too long. Set to 0 for unlimited time.
    *
-   * renderer is responible for creating the output. For example,
+   * renderer is responsible for creating the output. For example,
    * use the TessTextRenderer if you want plaintext output, or
    * the TessPDFRender to produce searchable PDF.
    *
@@ -568,6 +554,18 @@ public:
    * data structures.
    */
   char *GetAltoText(int page_number);
+
+   /**
+   * Make an XML-formatted string with PAGE markup from the internal
+   * data structures.
+   */
+  char *GetPAGEText(ETEXT_DESC *monitor, int page_number);
+
+  /**
+   * Make an XML-formatted string with PAGE markup from the internal
+   * data structures.
+   */
+  char *GetPAGEText(int page_number);
 
   /**
    * Make a TSV-formatted string from the internal data structures.
@@ -814,7 +812,7 @@ private:
                                  int tessedit_page_number);
 }; // class TessBaseAPI.
 
-/** Escape a char string - remove &<>"' with HTML codes. */
+/** Escape a char string - replace &<>"' with HTML codes. */
 std::string HOcrEscape(const char *text);
 
 } // namespace tesseract

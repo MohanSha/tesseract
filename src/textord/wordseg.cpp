@@ -23,6 +23,8 @@
 
 #include "wordseg.h"
 
+#include <cmath>
+
 #include "blobbox.h"
 #include "cjkpitch.h"
 #include "drawtord.h"
@@ -85,6 +87,7 @@ void make_single_word(bool one_blob, TO_ROW_LIST *rows, ROW_LIST *real_rows) {
     word->set_flag(W_EOL, true);
     word->set_flag(W_DONT_CHOP, one_blob);
     word_it.add_after_then_move(word);
+    real_row->recalc_bounding_box();
     row_it.add_after_then_move(real_row);
   }
 }
@@ -183,7 +186,7 @@ int32_t row_words(    // compute space size
   TBOX blob_box; // bounding box
                  // iterator
   BLOBNBOX_IT blob_it = row->blob_list();
-  STATS gap_stats(0, maxwidth);
+  STATS gap_stats(0, maxwidth - 1);
   STATS cluster_stats[4]; // clusters
 
   testpt = ICOORD(textord_test_x, textord_test_y);
@@ -222,7 +225,7 @@ int32_t row_words(    // compute space size
   lower = row->xheight * textord_words_initial_lower;
   upper = row->xheight * textord_words_initial_upper;
   cluster_count = gap_stats.cluster(lower, upper, textord_spacesize_ratioprop, 3, cluster_stats);
-  while (cluster_count < 2 && ceil(lower) < floor(upper)) {
+  while (cluster_count < 2 && std::ceil(lower) < std::floor(upper)) {
     // shrink gap
     upper = (upper * 3 + lower) / 4;
     lower = (lower * 3 + upper) / 4;
@@ -339,7 +342,7 @@ int32_t row_words2(   // compute space size
   TBOX blob_box; // bounding box
                  // iterator
   BLOBNBOX_IT blob_it = row->blob_list();
-  STATS gap_stats(0, maxwidth);
+  STATS gap_stats(0, maxwidth - 1);
   // gap sizes
   float gaps[BLOCK_STATS_CLUSTERS];
   STATS cluster_stats[BLOCK_STATS_CLUSTERS + 1];

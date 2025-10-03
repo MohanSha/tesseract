@@ -19,6 +19,7 @@
 
 #include <tesseract/ltrresultiterator.h>
 
+#include "helpers.h"  // for copy_string
 #include "pageres.h"
 #include "tesseractclass.h"
 
@@ -76,10 +77,7 @@ char *LTRResultIterator::GetUTF8Text(PageIteratorLevel level) const {
       }
     } while (level == RIL_BLOCK && res_it.block() == res_it.prev_block());
   }
-  int length = text.length() + 1;
-  char *result = new char[length];
-  strncpy(result, text.c_str(), length);
-  return result;
+  return copy_string(text);
 }
 
 // Set the string inserted at the end of each text line. "\n" by default.
@@ -101,13 +99,11 @@ float LTRResultIterator::Confidence(PageIteratorLevel level) const {
   float mean_certainty = 0.0f;
   int certainty_count = 0;
   PAGE_RES_IT res_it(*it_);
-  WERD_CHOICE *best_choice = res_it.word()->best_choice;
-  ASSERT_HOST(best_choice != nullptr);
+  WERD_CHOICE *best_choice;
   switch (level) {
     case RIL_BLOCK:
       do {
         best_choice = res_it.word()->best_choice;
-        ASSERT_HOST(best_choice != nullptr);
         mean_certainty += best_choice->certainty();
         ++certainty_count;
         res_it.forward();
@@ -116,7 +112,6 @@ float LTRResultIterator::Confidence(PageIteratorLevel level) const {
     case RIL_PARA:
       do {
         best_choice = res_it.word()->best_choice;
-        ASSERT_HOST(best_choice != nullptr);
         mean_certainty += best_choice->certainty();
         ++certainty_count;
         res_it.forward();
@@ -126,33 +121,26 @@ float LTRResultIterator::Confidence(PageIteratorLevel level) const {
     case RIL_TEXTLINE:
       do {
         best_choice = res_it.word()->best_choice;
-        ASSERT_HOST(best_choice != nullptr);
         mean_certainty += best_choice->certainty();
         ++certainty_count;
         res_it.forward();
       } while (res_it.row() == res_it.prev_row());
       break;
     case RIL_WORD:
-      mean_certainty += best_choice->certainty();
-      ++certainty_count;
+      best_choice = res_it.word()->best_choice;
+      mean_certainty = best_choice->certainty();
+      certainty_count = 1;
       break;
     case RIL_SYMBOL:
-      mean_certainty += best_choice->certainty(blob_index_);
-      ++certainty_count;
+      best_choice = res_it.word()->best_choice;
+      mean_certainty = best_choice->certainty(blob_index_);
+      certainty_count = 1;
   }
   if (certainty_count > 0) {
     mean_certainty /= certainty_count;
     return ClipToRange(100 + 5 * mean_certainty, 0.0f, 100.0f);
   }
   return 0.0f;
-}
-
-void LTRResultIterator::RowAttributes(float *row_height, float *descenders,
-                                      float *ascenders) const {
-  *row_height =
-      it_->row()->row->x_height() + it_->row()->row->ascenders() - it_->row()->row->descenders();
-  *descenders = it_->row()->row->descenders();
-  *ascenders = it_->row()->row->ascenders();
 }
 
 // Returns the font attributes of the current word. If iterating at a higher
@@ -318,11 +306,7 @@ char *LTRResultIterator::WordTruthUTF8Text() const {
   if (!HasTruthString()) {
     return nullptr;
   }
-  std::string truth_text = it_->word()->blamer_bundle->TruthString();
-  int length = truth_text.length() + 1;
-  char *result = new char[length];
-  strncpy(result, truth_text.c_str(), length);
-  return result;
+  return copy_string(it_->word()->blamer_bundle->TruthString());
 }
 
 // Returns the null terminated UTF-8 encoded normalized OCR string for the
@@ -334,14 +318,10 @@ char *LTRResultIterator::WordNormedUTF8Text() const {
   std::string ocr_text;
   WERD_CHOICE *best_choice = it_->word()->best_choice;
   const UNICHARSET *unicharset = it_->word()->uch_set;
-  ASSERT_HOST(best_choice != nullptr);
-  for (int i = 0; i < best_choice->length(); ++i) {
+  for (unsigned i = 0; i < best_choice->length(); ++i) {
     ocr_text += unicharset->get_normed_unichar(best_choice->unichar_id(i));
   }
-  int length = ocr_text.length() + 1;
-  char *result = new char[length];
-  strncpy(result, ocr_text.c_str(), length);
-  return result;
+  return copy_string(ocr_text);
 }
 
 // Returns a pointer to serialized choice lattice.
@@ -404,7 +384,7 @@ ChoiceIterator::ChoiceIterator(const LTRResultIterator &result_it) {
         strcmp(word_res_->CTC_symbol_choices[0][0].first, " ")) {
       blanks_before_word_ = 0;
     }
-    auto index = *tstep_index_;
+    unsigned index = *tstep_index_;
     index += blanks_before_word_;
     if (index < word_res_->CTC_symbol_choices.size()) {
       LSTM_choices_ = &word_res_->CTC_symbol_choices[index];
@@ -432,7 +412,8 @@ ChoiceIterator::~ChoiceIterator() {
 // are none left.
 bool ChoiceIterator::Next() {
   if (oemLSTM_ && LSTM_choices_ != nullptr && !LSTM_choices_->empty()) {
-    if (LSTM_choice_it_ != LSTM_choices_->end() && next(LSTM_choice_it_) == LSTM_choices_->end()) {
+    if (LSTM_choice_it_ == LSTM_choices_->end() ||
+        next(LSTM_choice_it_) == LSTM_choices_->end()) {
       return false;
     } else {
       ++LSTM_choice_it_;
@@ -484,7 +465,7 @@ float ChoiceIterator::Confidence() const {
 
 // Returns the set of timesteps which belong to the current symbol
 std::vector<std::vector<std::pair<const char *, float>>> *ChoiceIterator::Timesteps() const {
-  int offset = *tstep_index_ + blanks_before_word_;
+  unsigned offset = *tstep_index_ + blanks_before_word_;
   if (offset >= word_res_->segmented_timesteps.size() || !oemLSTM_) {
     return nullptr;
   }

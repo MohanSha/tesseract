@@ -27,6 +27,14 @@
 #  include <cstdint>
 #  include <vector>
 
+#  if defined(_MSC_VER) && _MSC_VER >= 1925 && _MSC_VER <= 1929 && \
+      defined(_WIN32) && !defined(_WIN64)
+// Optimize for size (/Os) instead of using the default optimization for some
+// versions of the 32 bit Visual Studio compiler which generate buggy code.
+#    pragma optimize("", off)
+#    pragma optimize("s", on)
+#  endif
+
 namespace tesseract {
 
 // Number of outputs held in each register. 8 x 32 bit ints.
@@ -560,7 +568,6 @@ static void matrixDotVector(int dim1, int dim2, const int8_t *wi, const double *
     output += group_size;
   }
   group_size /= 2;
-  w_step /= 2;
 
   if (output + group_size <= rounded_num_out) {
     PartialMatrixDotVector8(wi, scales, u, rounded_num_in, v);

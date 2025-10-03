@@ -138,7 +138,7 @@ class ColPartition;
 
 class BLOBNBOX;
 ELISTIZEH(BLOBNBOX)
-class BLOBNBOX : public ELIST_LINK {
+class BLOBNBOX : public ELIST<BLOBNBOX>::LINK {
 public:
   BLOBNBOX() {
     ReInit();
@@ -552,7 +552,7 @@ private:
   bool owns_cblob_ = false;
 };
 
-class TO_ROW : public ELIST2_LINK {
+class TO_ROW : public ELIST2<TO_ROW>::LINK {
 public:
   static const int kErrorWeight = 3;
 
@@ -695,7 +695,7 @@ private:
 };
 
 ELIST2IZEH(TO_ROW)
-class TESS_API TO_BLOCK : public ELIST_LINK {
+class TESS_API TO_BLOCK : public ELIST<TO_BLOCK>::LINK {
 public:
   TO_BLOCK() : pitch_decision(PITCH_DUNNO) {
     clear();
@@ -725,8 +725,8 @@ public:
     ASSERT_HOST(block->pdblk.poly_block() != nullptr);
     block->rotate(rotation);
     // Update the median size statistic from the blobs list.
-    STATS widths(0, block->pdblk.bounding_box().width());
-    STATS heights(0, block->pdblk.bounding_box().height());
+    STATS widths(0, block->pdblk.bounding_box().width() - 1);
+    STATS heights(0, block->pdblk.bounding_box().height() - 1);
     BLOBNBOX_IT blob_it(&blobs);
     for (blob_it.mark_cycle_pt(); !blob_it.cycled_list(); blob_it.forward()) {
       widths.add(blob_it.data()->bounding_box().width(), 1);
@@ -769,7 +769,7 @@ public:
 #ifndef GRAPHICS_DISABLED
   // Draw the noise blobs from all lists in red.
   void plot_noise_blobs(ScrollView *to_win);
-  // Draw the blobs on on the various lists in the block in different colors.
+  // Draw the blobs on the various lists in the block in different colors.
   void plot_graded_blobs(ScrollView *to_win);
 #endif
 

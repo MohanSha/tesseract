@@ -165,7 +165,7 @@ public:
   void ComputeScores(const INT_TEMPLATES_STRUCT *int_templates, int num_features,
                      const INT_FEATURE_STRUCT *features) {
     num_features_ = num_features;
-    int num_pruners = int_templates->NumClassPruners;
+    auto num_pruners = int_templates->NumClassPruners;
     for (int f = 0; f < num_features; ++f) {
       const INT_FEATURE_STRUCT *feature = &features[f];
       // Quantize the feature to NUM_CP_BUCKETS*NUM_CP_BUCKETS*NUM_CP_BUCKETS.
@@ -175,7 +175,7 @@ public:
       int class_id = 0;
       // Each CLASS_PRUNER_STRUCT only covers CLASSES_PER_CP(32) classes, so
       // we need a collection of them, indexed by pruner_set.
-      for (int pruner_set = 0; pruner_set < num_pruners; ++pruner_set) {
+      for (unsigned pruner_set = 0; pruner_set < num_pruners; ++pruner_set) {
         // Look up quantized feature in a 3-D array, an array of weights for
         // each class.
         const uint32_t *pruner_word_ptr = int_templates->ClassPruners[pruner_set]->p[x][y][theta];
@@ -676,7 +676,7 @@ IntegerMatcher::IntegerMatcher(tesseract::IntParam *classify_debug_level)
 
     if (kSEExponentialMultiplier > 0.0) {
       double scale =
-          1.0 - exp(-kSEExponentialMultiplier) *
+          1.0 - std::exp(-kSEExponentialMultiplier) *
                     exp(kSEExponentialMultiplier * (static_cast<double>(i) / SE_TABLE_SIZE));
       evidence *= ClipToRange(scale, 0.0, 1.0);
     }
@@ -892,7 +892,6 @@ void IntegerMatcher::DebugFeatureProtoError(INT_CLASS_STRUCT *ClassTemplate, BIT
   uint16_t ProtoNum;
   uint8_t ProtoWordNum;
   PROTO_SET_STRUCT *ProtoSet;
-  uint16_t ActualProtoNum;
 
   if (PrintMatchSummaryOn(Debug)) {
     tprintf("Configuration Mask:\n");
@@ -912,9 +911,8 @@ void IntegerMatcher::DebugFeatureProtoError(INT_CLASS_STRUCT *ClassTemplate, BIT
   if (PrintMatchSummaryOn(Debug)) {
     tprintf("Proto Mask:\n");
     for (ProtoSetIndex = 0; ProtoSetIndex < ClassTemplate->NumProtoSets; ProtoSetIndex++) {
-      ActualProtoNum = (ProtoSetIndex * PROTOS_PER_PROTO_SET);
       for (ProtoWordNum = 0; ProtoWordNum < 2; ProtoWordNum++, ProtoMask++) {
-        ActualProtoNum = (ProtoSetIndex * PROTOS_PER_PROTO_SET);
+        uint16_t ActualProtoNum = (ProtoSetIndex * PROTOS_PER_PROTO_SET);
         for (ProtoNum = 0; ((ProtoNum < (PROTOS_PER_PROTO_SET >> 1)) &&
                             (ActualProtoNum < ClassTemplate->NumProtos));
              ProtoNum++, ActualProtoNum++) {
@@ -934,7 +932,7 @@ void IntegerMatcher::DebugFeatureProtoError(INT_CLASS_STRUCT *ClassTemplate, BIT
     tprintf("Proto Evidence:\n");
     for (ProtoSetIndex = 0; ProtoSetIndex < ClassTemplate->NumProtoSets; ProtoSetIndex++) {
       ProtoSet = ClassTemplate->ProtoSets[ProtoSetIndex];
-      ActualProtoNum = (ProtoSetIndex * PROTOS_PER_PROTO_SET);
+      uint16_t ActualProtoNum = (ProtoSetIndex * PROTOS_PER_PROTO_SET);
       for (ProtoNum = 0;
            ((ProtoNum < PROTOS_PER_PROTO_SET) && (ActualProtoNum < ClassTemplate->NumProtos));
            ProtoNum++, ActualProtoNum++) {
@@ -991,7 +989,6 @@ void IntegerMatcher::DisplayProtoDebugInfo(INT_CLASS_STRUCT *ClassTemplate, BIT_
                                            const ScratchEvidence &tables,
                                            bool SeparateDebugWindows) {
   uint16_t ProtoNum;
-  uint16_t ActualProtoNum;
   PROTO_SET_STRUCT *ProtoSet;
   int ProtoSetIndex;
 
@@ -1003,7 +1000,7 @@ void IntegerMatcher::DisplayProtoDebugInfo(INT_CLASS_STRUCT *ClassTemplate, BIT_
 
   for (ProtoSetIndex = 0; ProtoSetIndex < ClassTemplate->NumProtoSets; ProtoSetIndex++) {
     ProtoSet = ClassTemplate->ProtoSets[ProtoSetIndex];
-    ActualProtoNum = ProtoSetIndex * PROTOS_PER_PROTO_SET;
+    uint16_t ActualProtoNum = ProtoSetIndex * PROTOS_PER_PROTO_SET;
     for (ProtoNum = 0;
          ((ProtoNum < PROTOS_PER_PROTO_SET) && (ActualProtoNum < ClassTemplate->NumProtos));
          ProtoNum++, ActualProtoNum++) {
@@ -1076,13 +1073,12 @@ void ScratchEvidence::UpdateSumOfProtoEvidences(INT_CLASS_STRUCT *ClassTemplate,
   uint16_t ProtoNum;
   PROTO_SET_STRUCT *ProtoSet;
   int NumProtos;
-  uint16_t ActualProtoNum;
 
   NumProtos = ClassTemplate->NumProtos;
 
   for (ProtoSetIndex = 0; ProtoSetIndex < ClassTemplate->NumProtoSets; ProtoSetIndex++) {
     ProtoSet = ClassTemplate->ProtoSets[ProtoSetIndex];
-    ActualProtoNum = (ProtoSetIndex * PROTOS_PER_PROTO_SET);
+    uint16_t ActualProtoNum = (ProtoSetIndex * PROTOS_PER_PROTO_SET);
     for (ProtoNum = 0; ((ProtoNum < PROTOS_PER_PROTO_SET) && (ActualProtoNum < NumProtos));
          ProtoNum++, ActualProtoNum++) {
       int temp = 0;

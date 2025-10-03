@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////
+// SPDX-License-Identifier: Apache-2.0
 // File:        capi.h
 // Description: C-API TessBaseAPI
 //
@@ -12,8 +12,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-///////////////////////////////////////////////////////////////////////
 
 #ifndef API_CAPI_H_
 #define API_CAPI_H_
@@ -158,6 +156,7 @@ TESS_API TessResultRenderer *TessHOcrRendererCreate(const char *outputbase);
 TESS_API TessResultRenderer *TessHOcrRendererCreate2(const char *outputbase,
                                                      BOOL font_info);
 TESS_API TessResultRenderer *TessAltoRendererCreate(const char *outputbase);
+TESS_API TessResultRenderer *TessPAGERendererCreate(const char *outputbase);
 TESS_API TessResultRenderer *TessTsvRendererCreate(const char *outputbase);
 TESS_API TessResultRenderer *TessPDFRendererCreate(const char *outputbase,
                                                    const char *datadir,
@@ -187,8 +186,6 @@ TESS_API int TessResultRendererImageNum(TessResultRenderer *renderer);
 
 TESS_API TessBaseAPI *TessBaseAPICreate();
 TESS_API void TessBaseAPIDelete(TessBaseAPI *handle);
-
-TESS_API size_t TessBaseAPIGetOpenCLDevice(TessBaseAPI *handle, void **device);
 
 TESS_API void TessBaseAPISetInputName(TessBaseAPI *handle, const char *name);
 TESS_API const char *TessBaseAPIGetInputName(TessBaseAPI *handle);
@@ -233,6 +230,12 @@ TESS_API int TessBaseAPIInit4(TessBaseAPI *handle, const char *datapath,
                               char **vars_values, size_t vars_vec_size,
                               BOOL set_only_non_debug_params);
 
+TESS_API int TessBaseAPIInit5(TessBaseAPI *handle, const char *data, int data_size,
+                              const char *language, TessOcrEngineMode mode,
+                              char **configs, int configs_size, char **vars_vec,
+                              char **vars_values, size_t vars_vec_size,
+                              BOOL set_only_non_debug_params);
+
 TESS_API const char *TessBaseAPIGetInitLanguagesAsString(
     const TessBaseAPI *handle);
 TESS_API char **TessBaseAPIGetLoadedLanguagesAsVector(
@@ -240,8 +243,6 @@ TESS_API char **TessBaseAPIGetLoadedLanguagesAsVector(
 TESS_API char **TessBaseAPIGetAvailableLanguagesAsVector(
     const TessBaseAPI *handle);
 
-TESS_API int TessBaseAPIInitLangMod(TessBaseAPI *handle, const char *datapath,
-                                    const char *language);
 TESS_API void TessBaseAPIInitForAnalysePage(TessBaseAPI *handle);
 
 TESS_API void TessBaseAPIReadConfigFile(TessBaseAPI *handle,
@@ -272,6 +273,7 @@ TESS_API void TessBaseAPISetRectangle(TessBaseAPI *handle, int left, int top,
                                       int width, int height);
 
 TESS_API struct Pix *TessBaseAPIGetThresholdedImage(TessBaseAPI *handle);
+TESS_API float TessBaseAPIGetGradient(TessBaseAPI *handle);
 TESS_API struct Boxa *TessBaseAPIGetRegions(TessBaseAPI *handle,
                                             struct Pixa **pixa);
 TESS_API struct Boxa *TessBaseAPIGetTextlines(TessBaseAPI *handle,
@@ -322,6 +324,7 @@ TESS_API char *TessBaseAPIGetUTF8Text(TessBaseAPI *handle);
 TESS_API char *TessBaseAPIGetHOCRText(TessBaseAPI *handle, int page_number);
 
 TESS_API char *TessBaseAPIGetAltoText(TessBaseAPI *handle, int page_number);
+TESS_API char *TessBaseAPIGetPAGEText(TessBaseAPI *handle, int page_number);
 TESS_API char *TessBaseAPIGetTsvText(TessBaseAPI *handle, int page_number);
 
 TESS_API char *TessBaseAPIGetBoxText(TessBaseAPI *handle, int page_number);

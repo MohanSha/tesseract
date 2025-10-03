@@ -243,8 +243,8 @@ public:
   void DisplayAdaptedChar(TBLOB *blob, INT_CLASS_STRUCT *int_class);
   bool AdaptableWord(WERD_RES *word);
   void EndAdaptiveClassifier();
-  void SettupPass1();
-  void SettupPass2();
+  void SetupPass1();
+  void SetupPass2();
   void AdaptiveClassifier(TBLOB *Blob, BLOB_CHOICE_LIST *Choices);
   void ClassifyAsNoise(ADAPT_RESULTS *Results);
   void ResetAdaptiveClassifierInternal();
@@ -394,7 +394,6 @@ public:
   double_VAR_H(matcher_clustering_max_angle_delta);
   double_VAR_H(classify_misfit_junk_penalty);
   double_VAR_H(rating_scale);
-  double_VAR_H(certainty_scale);
   double_VAR_H(tessedit_class_miss_scale);
   double_VAR_H(classify_adapted_pruning_factor);
   double_VAR_H(classify_adapted_pruning_threshold);
